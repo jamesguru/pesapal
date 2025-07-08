@@ -17,7 +17,7 @@ async function getAccessToken() {
 // Register IPN URL
 async function registerIPN(token) {
   const res = await axios.post(
-    "https://pay.pesapal.com/v3/api/Notification/RegisterIPN",
+    "https://pay.pesapal.com/v3/api/URLSetup/RegisterIPN",
     {
       url: "https://afrikanaccentadventures.com/api/pesapal/callback",
       ipn_notification_type: "GET" // or "POST" based on how your endpoint handles it
