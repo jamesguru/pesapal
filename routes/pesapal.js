@@ -180,6 +180,8 @@ router.get("/callback", async (req, res) => {
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
     const status = statusInfo.payment_status_description;
 
+    console.log(statusInfo)
+
     await pool.query(
       `UPDATE payments SET status = ? WHERE reference = ?`,
       [status, OrderMerchantReference]
