@@ -71,6 +71,7 @@ router.post("/payment", async (req, res) => {
       { headers }
     );
 
+    console.log("Response", response)
     const redirectUrl = response.data.redirect_url;
     console.log("Redirect user to:", redirectUrl);
     res.status(200).json({ payment_url: redirectUrl });
