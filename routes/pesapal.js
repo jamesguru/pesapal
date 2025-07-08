@@ -41,8 +41,10 @@ router.post("/payment", async (req, res) => {
     // Register IPN if you haven’t already stored one
     const notificationId = await registerIPN(token); // or use hardcoded IPN UUID if registered already
 
+    console.log("Notification", notificationId)
+
     const orderData = {
-      merchant_reference: `TXN-${Date.now()}`,
+      id: `TXN-${Date.now()}`,
       currency: "KES",
       amount: 10,
       description: "Testing",
