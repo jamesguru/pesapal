@@ -48,7 +48,7 @@ router.post("/payment", async (req, res) => {
       currency: "KES",
       amount: 1,
       description: "Testing",
-      callback_url: "https://afrikanaccentadventures.com/api/pesapal/callback",
+      callback_url: "https://api.afrikanaccentadventures.com/api/pesapal/callback",
       notification_id: notificationId,
       billing_address: {
         email_address: "user@example.com",
@@ -86,6 +86,7 @@ router.post("/payment", async (req, res) => {
 
 // Step 4: Callback route (after payment)
 router.get("/callback", async (req, res) => {
+  console.log("Received the callback request", req.body)
   res.status(200).json({ success: "Payment callback received" });
 });
 
