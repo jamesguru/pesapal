@@ -11,6 +11,7 @@ async function getAccessToken() {
     consumer_key: process.env.CONSUMER_KEY,
     consumer_secret: process.env.CONSUMER_SECRET
   });
+    console.log("TOKEN", data.token)
   return data.token;
 }
 
@@ -26,6 +27,8 @@ async function registerIPN(token) {
       headers: { Authorization: `Bearer ${token}` }
     }
   );
+
+  console.log("IPN", res.data.ipn_id)
 
   return res.data.ipn_id;
 }
@@ -53,6 +56,8 @@ router.post("/payment", async (req, res) => {
       }
     };
 
+    
+
     const response = await axios.post(
       "https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest",
       orderData,
@@ -64,6 +69,8 @@ router.post("/payment", async (req, res) => {
       }
     );
 
+    console.log('Response', response)
+
     const redirectUrl = response.data.redirect_url;
 
     console.log("Redirect user to:", redirectUrl);
@@ -74,5 +81,19 @@ router.post("/payment", async (req, res) => {
     res.status(500).json({ error: err.response?.data || err.message });
   }
 });
+
+// Step 4: Callback route (after payment)
+router.get("/callback", async (req, res) => {
+  res.status(200).json({ success: "Payment callback received" });
+});
+
+// Optional IPN listener endpoint
+router.get("/ipn", async (req, res) => {
+  console.log("IPN received:", req.query);
+  res.status(200).json({ received: true });
+});
+
+
+
 
 module.exports = router;
