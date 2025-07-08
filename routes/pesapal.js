@@ -45,8 +45,8 @@ router.post("/payment", async (req, res) => {
 
     const orderData = {
       id: `TXN-${Date.now()}`,
-      currency: "KES",
-      amount: 1,
+      currency: "USD",
+      amount: 0.01,
       description: "Testing",
       callback_url: "https://api.afrikanaccentadventures.com/api/pesapal/callback",
       notification_id: notificationId,
@@ -86,7 +86,7 @@ router.post("/payment", async (req, res) => {
 
 // Step 4: Callback route (after payment)
 router.get("/callback", async (req, res) => {
-  console.log("Received the callback request", req.body)
+  console.log("Received the callback request", req.params)
   res.status(200).json({ success: "Payment callback received" });
 });
 
