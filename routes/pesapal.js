@@ -87,21 +87,40 @@ router.post("/payment", async (req, res) => {
 
     // Store order in DB before redirect
     await pool.query(
-      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, notification_id,ip_address)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO payments (
+    reference,
+    currency,
+    amount,
+    description,
+    callback_url,
+    notification_id,
+    email_address,
+    phone_number,
+    first_name,
+    last_name,
+    status,
+    ip_address,
+    email,
+    phone
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderId,
         orderData.currency,
         orderData.amount,
         orderData.description,
+        orderData.callback_url,
+        notificationId,
         orderData.billing_address.email_address,
         orderData.billing_address.phone_number,
         orderData.billing_address.first_name,
         orderData.billing_address.last_name,
-        notificationId,
+        "PENDING",
         req.ip,
+        orderData.billing_address.email_address,
+        orderData.billing_address.phone_number
       ]
     );
+
 
 
     const redirectUrl = response.data.redirect_url;
@@ -121,22 +140,41 @@ router.post("/payment", async (req, res) => {
     };
 
     // Log failed attempt to DB
-    await pool.query(
-      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name,status,ip_address)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        orderId,
-        "USD",
-        0.01,
-        "Testing",
-        billing.email,
-        billing.phone,
-        billing.first_name,
-        billing.last_name,
-        "FAILED",
-        req.ip
-      ]
-    );
+   await pool.query(
+  `INSERT INTO payments (
+    reference,
+    currency,
+    amount,
+    description,
+    callback_url,
+    notification_id,
+    email_address,
+    phone_number,
+    first_name,
+    last_name,
+    status,
+    ip_address,
+    email,
+    phone
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  [
+    orderId,
+    "USD",
+    0.01,
+    "Testing",
+    "https://api.afrikanaccentadventures.com/api/pesapal/callback",
+    null,
+    billing.email,
+    billing.phone,
+    billing.first_name,
+    billing.last_name,
+    "FAILED",
+    req.ip,
+    billing.email,
+    billing.phone
+  ]
+);
+
 
     console.error("Pesapal Error:", err.response?.data || err.message);
     res.status(500).json({ error: err.response?.data || err.message });
