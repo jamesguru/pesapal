@@ -52,18 +52,20 @@ router.post("/payment", async (req, res) => {
     };
 
     const orderData = {
-      currency: "KES",
-      amount: 10.00,
-      description: "Testing",
-      callback_url: "https://afrikanaccentadventures.com/api/pesapal/callback", // Change to live callback URL in production
-      notification_id: notificationId,
-      billing_address: {
-        email_address: "user@example.com",
-        phone_number: "254727632051",
-        first_name: "James",
-        last_name: "Doe",
-      },
-    };
+  merchant_reference: `TXN-${Date.now()}`, // ✅ Must be unique
+  currency: "KES",
+  amount: 10.00,
+  description: "Testing",
+  callback_url: "https://afrikanaccentadventures.com/api/pesapal/callback", // use your public URL
+  notification_id: notificationId,
+  billing_address: {
+    email_address: "user@example.com",
+    phone_number: "254727632051",
+    first_name: "James",
+    last_name: "Doe"
+  }
+};
+
 
     const response = await axios.post(
       `${BASE_URL}/api/Transactions/SubmitOrderRequest`,
