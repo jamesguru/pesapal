@@ -86,9 +86,22 @@ router.post("/payment", async (req, res) => {
 
 // Step 4: Callback route (after payment)
 router.get("/callback", async (req, res) => {
-  console.log("Received the callback request", req.params)
-  res.status(200).json({ success: "Payment callback received" });
+  const orderTrackingId = req.query.OrderTrackingId;
+  const merchantReference = req.query.OrderMerchantReference;
+
+  console.log("OrderTrackingId:", orderTrackingId);
+  console.log("MerchantReference:", merchantReference);
+
+  // Optionally: Query Pesapal status using this data
+  // await checkTransactionStatus(orderTrackingId, merchantReference);
+
+  res.status(200).json({
+    message: "Callback received",
+    orderTrackingId,
+    merchantReference
+  });
 });
+
 
 // Optional IPN listener endpoint
 router.get("/ipn", async (req, res) => {
