@@ -191,7 +191,7 @@ router.get("/callback", async (req, res) => {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
     console.log("STATUS INFO IN CALLBACK", statusInfo)
-    const status = statusInfo.payment_status_description.toLowerCase(); // e.g., COMPLETED, FAILED, INVALID, etc.
+    const status = statusInfo.payment_status_description; // e.g., COMPLETED, FAILED, INVALID, etc.
 
     await pool.query(
       `UPDATE payments SET status = ? WHERE reference = ?`,
