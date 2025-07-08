@@ -46,7 +46,7 @@ router.post("/payment", async (req, res) => {
     const orderData = {
       id: `TXN-${Date.now()}`,
       currency: "KES",
-      amount: 10,
+      amount: 1,
       description: "Testing",
       callback_url: "https://afrikanaccentadventures.com/api/pesapal/callback",
       notification_id: notificationId,
