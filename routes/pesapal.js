@@ -87,7 +87,7 @@ router.post("/payment", async (req, res) => {
 
     // Store order in DB before redirect
     await pool.query(
-      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, notification_id, ip_address,status)
+      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, notification_id,ip_address)
    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderId,
@@ -100,7 +100,6 @@ router.post("/payment", async (req, res) => {
         orderData.billing_address.last_name,
         notificationId,
         req.ip,
-        "PENDING"
       ]
     );
 
@@ -123,7 +122,7 @@ router.post("/payment", async (req, res) => {
 
     // Log failed attempt to DB
     await pool.query(
-      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, status,ip_address)
+      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name,status,ip_address)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderId,
