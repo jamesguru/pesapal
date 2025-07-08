@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const dotenv = require("dotenv");
 const router = express.Router();
+const pool = require("../Database/database.js");
 
 dotenv.config();
 
@@ -11,7 +12,6 @@ async function getAccessToken() {
     consumer_key: process.env.CONSUMER_KEY,
     consumer_secret: process.env.CONSUMER_SECRET
   });
-    console.log("TOKEN", data.token)
   return data.token;
 }
 
@@ -33,6 +33,20 @@ async function registerIPN(token) {
   return res.data.ipn_id;
 }
 
+
+async function checkTransactionStatus(orderTrackingId, token) {
+  const { data } = await axios.get(
+    `https://pay.pesapal.com/v3/api/Transactions/GetTransactionStatus?orderTrackingId=${orderTrackingId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+  return data;
+}
+
+
 // Submit order
 router.post("/payment", async (req, res) => {
   try {
@@ -41,10 +55,10 @@ router.post("/payment", async (req, res) => {
     // Register IPN if you haven’t already stored one
     const notificationId = await registerIPN(token); // or use hardcoded IPN UUID if registered already
 
-    console.log("Notification", notificationId)
+    const orderId = `TXN-${Date.now()}`; // Generate reference
 
     const orderData = {
-      id: `TXN-${Date.now()}`,
+      id: orderId,
       currency: "USD",
       amount: 0.01,
       description: "Testing",
@@ -58,8 +72,6 @@ router.post("/payment", async (req, res) => {
       }
     };
 
-    
-
     const response = await axios.post(
       "https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest",
       orderData,
@@ -71,14 +83,58 @@ router.post("/payment", async (req, res) => {
       }
     );
 
-    console.log('Response', response)
+
+    // Store order in DB before redirect
+    await pool.query(
+      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, notification_id)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        orderId,
+        orderData.currency,
+        orderData.amount,
+        orderData.description,
+        orderData.billing_address.email_address,
+        orderData.billing_address.phone_number,
+        orderData.billing_address.first_name,
+        orderData.billing_address.last_name,
+        notificationId
+      ]
+    );
+
 
     const redirectUrl = response.data.redirect_url;
 
-    console.log("Redirect user to:", redirectUrl);
+
+
     res.json({ redirect_url: redirectUrl });
 
   } catch (err) {
+
+    const orderId = `TXN-${Date.now()}`;
+    const billing = {
+      email: req.body?.email || 'user@example.com',
+      phone: req.body?.phone || '254727632051',
+      first_name: req.body?.first_name || 'James',
+      last_name: req.body?.last_name || 'Doe'
+    };
+
+    // Log failed attempt to DB
+    await pool.query(
+      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        orderId,
+        "USD",
+        0.01,
+        "Testing",
+        billing.email,
+        billing.phone,
+        billing.first_name,
+        billing.last_name,
+        "failed"
+      ]
+    );
+
     console.error("Pesapal Error:", err.response?.data || err.message);
     res.status(500).json({ error: err.response?.data || err.message });
   }
@@ -86,26 +142,34 @@ router.post("/payment", async (req, res) => {
 
 // Step 4: Callback route (after payment)
 router.get("/callback", async (req, res) => {
-  const orderTrackingId = req.query.OrderTrackingId;
-  const merchantReference = req.query.OrderMerchantReference;
+  const { OrderTrackingId, OrderMerchantReference } = req.query;
 
-  console.log("OrderTrackingId:", orderTrackingId);
-  console.log("MerchantReference:", merchantReference);
+  console.log("Callback received:", OrderTrackingId, OrderMerchantReference);
 
-  // Optionally: Query Pesapal status using this data
-  // await checkTransactionStatus(orderTrackingId, merchantReference);
+  try {
+    const token = await getAccessToken();
+    const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
+    const status = statusInfo.payment_status.toLowerCase(); // e.g., COMPLETED, FAILED, INVALID, etc.
 
-  res.status(200).json({
-    message: "Callback received",
-    orderTrackingId,
-    merchantReference
-  });
+    await pool.query(
+      `UPDATE payments SET status = ? WHERE reference = ?`,
+      [status, OrderMerchantReference]
+    );
+
+    res.status(200).json({
+      message: "Callback processed",
+      status: status,
+      reference: OrderMerchantReference
+    });
+  } catch (err) {
+    console.error("Failed to update callback status:", err.message);
+    res.status(500).json({ error: "Failed to update payment status" });
+  }
 });
 
 
 // Optional IPN listener endpoint
 router.get("/ipn", async (req, res) => {
-  console.log("IPN received:", req.query);
   res.status(200).json({ received: true });
 });
 
