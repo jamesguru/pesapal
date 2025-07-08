@@ -63,7 +63,7 @@ router.post("/payment", async (req, res) => {
       currency: "USD",
       amount: 0.01,
       description: "Testing",
-      callback_url: "https://afrikanaccentadventures.com/payment/status", // ✅ frontend callback!
+      callback_url: "https://afrikanaccentadventures.com/contacts", // ✅ frontend callback!
       notification_id: notificationId,
       billing_address: {
         email_address: billing.email,
@@ -152,7 +152,7 @@ router.post("/payment", async (req, res) => {
         "USD",
         0.01,
         "Testing",
-        "https://afrikanaccentadventures.com/payment/contacts",
+        "https://afrikanaccentadventures.com/contacts",
         null,
         billing.email,
         billing.phone,
