@@ -25,7 +25,7 @@ async function getAccessToken() {
 async function registerIPNUrl(token) {
   if (cachedNotificationId) return cachedNotificationId;
 
-  const url = `${BASE_URL}/api/URLs/Notification`;
+  const url = `${BASE_URL}/api/URLSetup/RegisterIPN`;
   const headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
