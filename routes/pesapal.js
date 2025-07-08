@@ -62,7 +62,7 @@ router.post("/payment", async (req, res) => {
       currency: "USD",
       amount: 0.01,
       description: "Testing",
-      callback_url: "https://afrikanaccentadventures.com/contacts",
+      callback_url: "https://api.afrikanaccentadventures.com/api/pesapal/callback",
       notification_id: notificationId,
       billing_address: {
         email_address: "user@example.com",
