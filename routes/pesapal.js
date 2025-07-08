@@ -17,6 +17,7 @@ async function getAccessToken() {
   };
 
   const res = await axios.post(url, credentials);
+  console.log(res.data)
   return res.data.token;
 }
 
