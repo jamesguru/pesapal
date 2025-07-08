@@ -83,10 +83,11 @@ router.post("/payment", async (req, res) => {
       }
     );
 
+    console.log("IP ADDRESS", req.ip)
 
     // Store order in DB before redirect
     await pool.query(
-      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, notification_id)
+      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, notification_id, ip_address,status)
    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderId,
@@ -97,7 +98,9 @@ router.post("/payment", async (req, res) => {
         orderData.billing_address.phone_number,
         orderData.billing_address.first_name,
         orderData.billing_address.last_name,
-        notificationId
+        notificationId,
+        req.ip,
+        "PENDING"
       ]
     );
 
@@ -120,7 +123,7 @@ router.post("/payment", async (req, res) => {
 
     // Log failed attempt to DB
     await pool.query(
-      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, status)
+      `INSERT INTO payments (reference, currency, amount, description, email, phone, first_name, last_name, status,ip_address)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderId,
@@ -131,7 +134,8 @@ router.post("/payment", async (req, res) => {
         billing.phone,
         billing.first_name,
         billing.last_name,
-        "failed"
+        "FAILED",
+        req.ip
       ]
     );
 
@@ -149,6 +153,7 @@ router.get("/callback", async (req, res) => {
   try {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
+    console.log("STATUS INFO IN CALLBACK", statusInfo)
     const status = statusInfo.payment_status.toLowerCase(); // e.g., COMPLETED, FAILED, INVALID, etc.
 
     await pool.query(
