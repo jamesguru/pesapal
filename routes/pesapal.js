@@ -152,7 +152,7 @@ router.post("/payment", async (req, res) => {
         "USD",
         0.01,
         "Testing",
-        "https://afrikanaccentadventures.com/payment/status",
+        "https://afrikanaccentadventures.com/payment/contacts",
         null,
         billing.email,
         billing.phone,
