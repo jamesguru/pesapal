@@ -99,6 +99,7 @@ router.post("/payment", async (req, res) => {
     await pool.query(
       `INSERT INTO payments (
         reference,
+        booking_ref, 
         currency,
         amount,
         description,
@@ -115,6 +116,7 @@ router.post("/payment", async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderId,
+        reference,
         orderData.currency,
         orderData.amount,
         orderData.description,
@@ -145,6 +147,7 @@ router.post("/payment", async (req, res) => {
     await pool.query(
       `INSERT INTO payments (
         reference,
+         booking_ref, 
         currency,
         amount,
         description,
@@ -161,6 +164,7 @@ router.post("/payment", async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderId,
+        reference,
         "USD",
         0.01,
         "Testing",
@@ -192,23 +196,44 @@ router.get("/callback", async (req, res) => {
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
     const status = statusInfo.payment_status_description;
 
-    console.log(statusInfo)
+    console.log("Pesapal Status Info:", statusInfo);
 
+    // 1. Update payments table
     await pool.query(
       `UPDATE payments SET status = ? WHERE reference = ?`,
       [status, OrderMerchantReference]
     );
 
+    // 2. Select booking_ref from payments
+    const [rows] = await pool.query(
+      `SELECT booking_ref FROM payments WHERE reference = ?`,
+      [OrderMerchantReference]
+    );
+
+    if (rows.length === 0 || !rows[0].booking_ref) {
+      return res.status(404).json({ error: "Booking reference not found in payments" });
+    }
+
+    const bookingRef = rows[0].booking_ref;
+
+    // 3. Update bookings table
+    await pool.query(
+      `UPDATE bookings SET status = 4 WHERE booking_ref = ?`,
+      [bookingRef]
+    );
+
     res.status(200).json({
       message: "Callback processed",
       status: status,
-      reference: OrderMerchantReference
+      reference: OrderMerchantReference,
+      booking_ref: bookingRef
     });
   } catch (err) {
-    console.error("Failed to update callback status:", err.message);
+    console.error("Failed to process callback:", err.message);
     res.status(500).json({ error: "Failed to update payment status" });
   }
 });
+
 
 // API endpoint to let frontend check payment status
 router.get("/status", async (req, res) => {
