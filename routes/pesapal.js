@@ -61,7 +61,7 @@ router.post("/payment", async (req, res) => {
   try {
     const token = await getAccessToken();
     const notificationId = await registerIPN(token);
-    const orderId = `AAA-1752079866342`;
+    const orderId = `AAA-${Date.now()}`;
 
     const billing = {
       email: "user@example.com",
@@ -134,7 +134,7 @@ router.post("/payment", async (req, res) => {
     res.json({ redirect_url: response.data.redirect_url });
 
   } catch (err) {
-    const orderId = `AAA-1752079866342`;
+    const orderId = `AAA-${Date.now()}`;
     const billing = {
       email: req.body?.email || 'user@example.com',
       phone: req.body?.phone || '254727632051',
@@ -191,23 +191,13 @@ router.get("/callback", async (req, res) => {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
     const status = statusInfo.payment_status_description;
-    let action = statusInfo.payment_status_code;
 
-    if (!action) {
-      action = "accepted"
-    }
+    console.log(statusInfo)
 
     await pool.query(
-      `UPDATE payments SET status = ?, action = ? WHERE reference = ?`,
-      [status, action, OrderMerchantReference]
+      `UPDATE payments SET status = ? WHERE reference = ?`,
+      [status, OrderMerchantReference]
     );
-
-     // Update bookings table (set status to 4)
-    await pool.query(
-      `UPDATE bookings SET status = 4 WHERE booking_ref = ?`,
-      [OrderMerchantReference]
-    );
-
 
     res.status(200).json({
       message: "Callback processed",
