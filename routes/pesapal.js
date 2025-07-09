@@ -46,6 +46,9 @@ async function checkTransactionStatus(orderTrackingId, token) {
 
 // Payment route
 router.post("/payment", async (req, res) => {
+
+  const token = await getAccessToken();
+  const notificationId = await registerIPN(token);
   const {
     email,
     phone,
@@ -66,7 +69,7 @@ router.post("/payment", async (req, res) => {
   };
 
   const callbackUrl = "https://afrikanaccentadventures.com/contacts";
-  const notificationId = await registerIPN(token);
+
 
   const orderData = {
     id: reference,
@@ -84,9 +87,7 @@ router.post("/payment", async (req, res) => {
   };
 
   try {
-    const token = await getAccessToken();
-    notificationId = await registerIPN(token);
-    orderData.notification_id = notificationId;
+    
 
     const response = await axios.post(
       "https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest",
