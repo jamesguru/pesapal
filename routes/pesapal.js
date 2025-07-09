@@ -71,7 +71,7 @@ router.post("/payment", async (req, res) => {
     };
 
     const orderData = {
-      id: reference,
+      id: orderId,
       currency: "USD",
       amount: amount,
       description: "Testing",
