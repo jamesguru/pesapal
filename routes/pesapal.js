@@ -50,6 +50,7 @@ router.post("/payment", async (req, res) => {
     const token = await getAccessToken();
     const notificationId = await registerIPN(token);
     const orderId = `TXN-${Date.now()}`;
+    const currency = "USD";
 
     const {
       email,
