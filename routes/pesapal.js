@@ -218,7 +218,7 @@ router.get("/callback", async (req, res) => {
 
     // 3. Update bookings table
     await pool.query(
-      `UPDATE bookings SET status = 4 WHERE booking_ref = ?`,
+      `UPDATE bookings SET status = 2 WHERE booking_ref = ?`,
       [bookingRef]
     );
 
