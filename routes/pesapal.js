@@ -49,13 +49,13 @@ router.post("/payment", async (req, res) => {
   try {
     const token = await getAccessToken();
     const notificationId = await registerIPN(token);
-    const orderId = `TXN-${Date.now()}`;
     const currency = "USD";
 
     const {
       email,
       phone,
       first_name,
+      reference,
       last_name,
       amount,
       description
@@ -69,7 +69,7 @@ router.post("/payment", async (req, res) => {
     };
 
     const orderData = {
-      id: orderId,
+      id: reference,
       currency,
       amount,
       description,
@@ -182,18 +182,27 @@ router.post("/payment", async (req, res) => {
 // Server-side callback (Pesapal backend hits this to notify you)
 router.get("/callback", async (req, res) => {
   const { OrderTrackingId, OrderMerchantReference } = req.query;
-  console.log("Callback received:", OrderTrackingId, OrderMerchantReference);
 
   try {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
-    const status = statusInfo.payment_status_description;
+    const status = statusInfo.payment_status_description.toUpperCase();
+    const action = statusInfo.payment_status_code;
 
-    console.log(statusInfo)
+    if (!action) {
+      action = "accepted"
+    }
 
     await pool.query(
-      `UPDATE payments SET status = ? WHERE reference = ?`,
-      [status, OrderMerchantReference]
+      `UPDATE payments SET status = ?, action = ? WHERE reference = ?`,
+      [status, action, OrderMerchantReference]
+    );
+
+
+    // Update bookings table (set status to 4)
+    await pool.query(
+      `UPDATE bookings SET status = 4 WHERE booking_ref = ?`,
+      [OrderMerchantReference]
     );
 
     res.status(200).json({
