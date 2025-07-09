@@ -191,13 +191,23 @@ router.get("/callback", async (req, res) => {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
     const status = statusInfo.payment_status_description;
+    let action = statusInfo.payment_status_code;
 
-    console.log(statusInfo)
+    if (!action) {
+      action = "accepted"
+    }
 
     await pool.query(
-      `UPDATE payments SET status = ? WHERE reference = ?`,
-      [status, OrderMerchantReference]
+      `UPDATE payments SET status = ?, action = ? WHERE reference = ?`,
+      [status, action, OrderMerchantReference]
     );
+
+     // Update bookings table (set status to 4)
+    await pool.query(
+      `UPDATE bookings SET status = 4 WHERE booking_ref = ?`,
+      [OrderMerchantReference]
+    );
+
 
     res.status(200).json({
       message: "Callback processed",
