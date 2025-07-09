@@ -51,19 +51,28 @@ router.post("/payment", async (req, res) => {
     const notificationId = await registerIPN(token);
     const orderId = `TXN-${Date.now()}`;
 
+    const {
+      email,
+      phone,
+      first_name,
+      last_name,
+      amount,
+      description
+    } = req.body;
+
     const billing = {
-      email: "user@example.com",
-      phone: "254727632051",
-      first_name: "James",
-      last_name: "Doe"
+      email: email || "user@example.com",
+      phone: phone || "254727632051",
+      first_name: first_name || "James",
+      last_name: last_name || "Doe"
     };
 
     const orderData = {
       id: orderId,
-      currency: "USD",
-      amount: 0.01,
-      description: "Testing",
-      callback_url: "https://afrikanaccentadventures.com/contacts", // ✅ frontend callback!
+      currency,
+      amount,
+      description,
+      callback_url: "https://afrikanaccentadventures.com/contacts",
       notification_id: notificationId,
       billing_address: {
         email_address: billing.email,
@@ -72,7 +81,6 @@ router.post("/payment", async (req, res) => {
         last_name: billing.last_name
       }
     };
-
     const response = await axios.post(
       "https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest",
       orderData,
