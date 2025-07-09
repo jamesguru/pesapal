@@ -61,6 +61,8 @@ router.post("/payment", async (req, res) => {
       description
     } = req.body;
 
+    console.log("reference", reference)
+
     const billing = {
       email: email || "user@example.com",
       phone: phone || "254727632051",
