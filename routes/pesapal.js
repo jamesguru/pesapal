@@ -46,8 +46,13 @@ async function checkTransactionStatus(orderTrackingId, token) {
 
 // Payment route
 router.post("/payment", async (req, res) => {
+  try {
+    const token = await getAccessToken();
+    const notificationId = await registerIPN(token);
+    const orderId = `TXN-${Date.now()}`;
 
-     const {
+
+    const {
       email,
       reference,
       phone,
@@ -57,10 +62,6 @@ router.post("/payment", async (req, res) => {
       description
     } = req.body;
 
-  try {
-    const token = await getAccessToken();
-    const notificationId = await registerIPN(token);
-    const orderId = `TXN-${Date.now()}`;
     const billing = {
       email: email || "user@example.com",
       description: description || "Nothing",
@@ -68,8 +69,6 @@ router.post("/payment", async (req, res) => {
       first_name: first_name || "James",
       last_name: last_name || "Doe"
     };
-
-    console.log("REFERENCE", reference)
 
     const orderData = {
       id: reference,
@@ -115,7 +114,7 @@ router.post("/payment", async (req, res) => {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        reference,
+        orderId,
         orderData.currency,
         orderData.amount,
         orderData.description,
@@ -161,7 +160,7 @@ router.post("/payment", async (req, res) => {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        reference,
+        orderId,
         "USD",
         0.01,
         "Testing",
