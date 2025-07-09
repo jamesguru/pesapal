@@ -46,47 +46,48 @@ async function checkTransactionStatus(orderTrackingId, token) {
 
 // Payment route
 router.post("/payment", async (req, res) => {
+  const {
+    email,
+    phone,
+    first_name,
+    reference,
+    last_name,
+    amount,
+    description
+  } = req.body;
 
-   const {
-      email,
-      phone,
-      first_name,
-      reference,
-      last_name,
-      amount,
-      description
-    } = req.body;
+  const currency = "USD";
 
-    //Request body
+  const billing = {
+    email: email || "user@example.com",
+    phone: phone || "254727632051",
+    first_name: first_name || "James",
+    last_name: last_name || "Doe"
+  };
+
+  const callbackUrl = "https://afrikanaccentadventures.com/contacts";
+  let notificationId = null;
+
+  const orderData = {
+    id: reference,
+    currency,
+    amount,
+    description,
+    callback_url: callbackUrl,
+    notification_id: null, // set later after getting notificationId
+    billing_address: {
+      email_address: billing.email,
+      phone_number: billing.phone,
+      first_name: billing.first_name,
+      last_name: billing.last_name
+    }
+  };
 
   try {
     const token = await getAccessToken();
-    const notificationId = await registerIPN(token);
-    const currency = "USD";
+    notificationId = await registerIPN(token);
+    orderData.notification_id = notificationId;
 
-    console.log("reference", reference)
-
-    const billing = {
-      email: email || "user@example.com",
-      phone: phone || "254727632051",
-      first_name: first_name || "James",
-      last_name: last_name || "Doe"
-    };
-
-    const orderData = {
-      id: reference,
-      currency,
-      amount,
-      description,
-      callback_url: "https://afrikanaccentadventures.com/contacts",
-      notification_id: notificationId,
-      billing_address: {
-        email_address: billing.email,
-        phone_number: billing.phone,
-        first_name: billing.first_name,
-        last_name: billing.last_name
-      }
-    };
     const response = await axios.post(
       "https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest",
       orderData,
@@ -121,7 +122,7 @@ router.post("/payment", async (req, res) => {
         orderData.amount,
         orderData.description,
         orderData.callback_url,
-        notificationId,
+        orderData.notification_id,
         billing.email,
         billing.phone,
         billing.first_name,
@@ -136,14 +137,6 @@ router.post("/payment", async (req, res) => {
     res.json({ redirect_url: response.data.redirect_url });
 
   } catch (err) {
-    const orderId = `TXN-${Date.now()}`;
-    const billing = {
-      email: req.body?.email || 'user@example.com',
-      phone: req.body?.phone || '254727632051',
-      first_name: req.body?.first_name || 'James',
-      last_name: req.body?.last_name || 'Doe'
-    };
-
     await pool.query(
       `INSERT INTO payments (
         reference,
@@ -183,6 +176,7 @@ router.post("/payment", async (req, res) => {
     res.status(500).json({ error: err.response?.data || err.message });
   }
 });
+
 
 // Server-side callback (Pesapal backend hits this to notify you)
 router.get("/callback", async (req, res) => {
