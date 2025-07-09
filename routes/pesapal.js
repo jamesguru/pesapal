@@ -61,7 +61,7 @@ router.post("/payment", async (req, res) => {
   try {
     const token = await getAccessToken();
     const notificationId = await registerIPN(token);
-    const orderId = `AAA-${Date.now()}`;
+    const orderId = `AAA-1752079866342`;
 
     const billing = {
       email: "user@example.com",
@@ -134,7 +134,7 @@ router.post("/payment", async (req, res) => {
     res.json({ redirect_url: response.data.redirect_url });
 
   } catch (err) {
-    const orderId = `TXN-${Date.now()}`;
+    const orderId = `AAA-1752079866342`;
     const billing = {
       email: req.body?.email || 'user@example.com',
       phone: req.body?.phone || '254727632051',
