@@ -187,7 +187,7 @@ router.get("/callback", async (req, res) => {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
     const status = statusInfo.payment_status_description.toUpperCase();
-    const action = statusInfo.payment_status_code;
+    let action = statusInfo.payment_status_code;
 
     if (!action) {
       action = "accepted"
