@@ -61,7 +61,7 @@ router.post("/payment", async (req, res) => {
   try {
     const token = await getAccessToken();
     const notificationId = await registerIPN(token);
-    const orderId = `TXN-${Date.now()}`;
+    const orderId = `AAA-${Date.now()}`;
 
     const billing = {
       email: "user@example.com",
