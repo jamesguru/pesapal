@@ -114,7 +114,7 @@ router.post("/payment", async (req, res) => {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        reference,
+        orderId,
         orderData.currency,
         orderData.amount,
         orderData.description,
@@ -160,7 +160,7 @@ router.post("/payment", async (req, res) => {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        reference,
+        orderId,
         "USD",
         0.01,
         "Testing",
