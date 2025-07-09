@@ -189,19 +189,24 @@ router.post("/payment", async (req, res) => {
 // Server-side callback (Pesapal backend hits this to notify you)
 router.get("/callback", async (req, res) => {
   const { OrderTrackingId, OrderMerchantReference } = req.query;
-  console.log("Callback received:", OrderTrackingId, OrderMerchantReference);
+
 
   try {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
     const status = statusInfo.payment_status_description;
 
-    console.log("Pesapal Status Info:", statusInfo);
+      let action = statusInfo.payment_status_code;
+
+          if (!action) {
+            action = "user accepted payment"
+          }
+
 
     // 1. Update payments table
-    await pool.query(
-      `UPDATE payments SET status = ? WHERE reference = ?`,
-      [status, OrderMerchantReference]
+  await pool.query(
+      `UPDATE payments SET status = ?, action = ? WHERE reference = ?`,
+      [status, action, OrderMerchantReference]
     );
 
     // 2. Select booking_ref from payments
