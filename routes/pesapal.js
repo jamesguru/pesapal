@@ -46,6 +46,18 @@ async function checkTransactionStatus(orderTrackingId, token) {
 
 // Payment route
 router.post("/payment", async (req, res) => {
+
+   const {
+      email,
+      reference,
+      phone,
+      first_name,
+      last_name,
+      amount,
+      description
+    } = req.body;
+
+
   try {
     const token = await getAccessToken();
     const notificationId = await registerIPN(token);
@@ -59,9 +71,9 @@ router.post("/payment", async (req, res) => {
     };
 
     const orderData = {
-      id: orderId,
+      id: reference,
       currency: "USD",
-      amount: 0.01,
+      amount: amount,
       description: "Testing",
       callback_url: "https://afrikanaccentadventures.com/contacts", // ✅ frontend callback!
       notification_id: notificationId,
@@ -102,7 +114,7 @@ router.post("/payment", async (req, res) => {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        orderId,
+        reference,
         orderData.currency,
         orderData.amount,
         orderData.description,
@@ -148,7 +160,7 @@ router.post("/payment", async (req, res) => {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        orderId,
+        reference,
         "USD",
         0.01,
         "Testing",
