@@ -46,35 +46,24 @@ async function checkTransactionStatus(orderTrackingId, token) {
 
 // Payment route
 router.post("/payment", async (req, res) => {
-try {
+  try {
     const token = await getAccessToken();
     const notificationId = await registerIPN(token);
     const orderId = `TXN-${Date.now()}`;
-    const currency = "USD";
-
-    const {
-      email,
-      reference,
-      phone,
-      first_name,
-      last_name,
-      amount,
-      description
-    } = req.body;
 
     const billing = {
-      email: email || "user@example.com",
-      phone: phone || "254727632051",
-      first_name: first_name || "James",
-      last_name: last_name || "Doe"
+      email: "user@example.com",
+      phone: "254727632051",
+      first_name: "James",
+      last_name: "Doe"
     };
 
     const orderData = {
-      id: reference,
-      currency,
-      amount,
-      description,
-      callback_url: "https://afrikanaccentadventures.com/contacts",
+      id: orderId,
+      currency: "USD",
+      amount: 0.01,
+      description: "Testing",
+      callback_url: "https://afrikanaccentadventures.com/contacts", // ✅ frontend callback!
       notification_id: notificationId,
       billing_address: {
         email_address: billing.email,
@@ -83,6 +72,7 @@ try {
         last_name: billing.last_name
       }
     };
+
     const response = await axios.post(
       "https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest",
       orderData,
@@ -112,7 +102,7 @@ try {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        reference,
+        orderId,
         orderData.currency,
         orderData.amount,
         orderData.description,
@@ -158,7 +148,7 @@ try {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        "AXBOKXLOUYT",
+        orderId,
         "USD",
         0.01,
         "Testing",
@@ -180,31 +170,21 @@ try {
   }
 });
 
-
 // Server-side callback (Pesapal backend hits this to notify you)
 router.get("/callback", async (req, res) => {
   const { OrderTrackingId, OrderMerchantReference } = req.query;
+  console.log("Callback received:", OrderTrackingId, OrderMerchantReference);
 
   try {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
-    const status = statusInfo.payment_status_description.toUpperCase();
-    let action = statusInfo.payment_status_code;
+    const status = statusInfo.payment_status_description;
 
-    if (!action) {
-      action = "accepted"
-    }
+    console.log(statusInfo)
 
     await pool.query(
-      `UPDATE payments SET status = ?, action = ? WHERE reference = ?`,
-      [status, action, OrderMerchantReference]
-    );
-
-
-    // Update bookings table (set status to 4)
-    await pool.query(
-      `UPDATE bookings SET status = 4 WHERE booking_ref = ?`,
-      [OrderMerchantReference]
+      `UPDATE payments SET status = ? WHERE reference = ?`,
+      [status, OrderMerchantReference]
     );
 
     res.status(200).json({
