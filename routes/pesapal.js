@@ -66,7 +66,7 @@ router.post("/payment", async (req, res) => {
   };
 
   const callbackUrl = "https://afrikanaccentadventures.com/contacts";
-  let notificationId = null;
+  const notificationId = await registerIPN(token);
 
   const orderData = {
     id: reference,
@@ -74,7 +74,7 @@ router.post("/payment", async (req, res) => {
     amount,
     description,
     callback_url: callbackUrl,
-    notification_id: null, // set later after getting notificationId
+    notification_id: notificationId, // set later after getting notificationId
     billing_address: {
       email_address: billing.email,
       phone_number: billing.phone,
