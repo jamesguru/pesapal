@@ -51,30 +51,18 @@ router.post("/payment", async (req, res) => {
     const notificationId = await registerIPN(token);
     const orderId = `TXN-${Date.now()}`;
 
-
-    const {
-      email,
-      reference,
-      phone,
-      first_name,
-      last_name,
-      amount,
-      description
-    } = req.body;
-
     const billing = {
-      email: email || "user@example.com",
-      description: description || "Nothing",
-      phone: phone || "254727632051",
-      first_name: first_name || "James",
-      last_name: last_name || "Doe"
+      email: "user@example.com",
+      phone: "254727632051",
+      first_name: "James",
+      last_name: "Doe"
     };
 
     const orderData = {
-      id: reference,
+      id: orderId,
       currency: "USD",
-      amount: amount,
-      description: description,
+      amount: 0.01,
+      description: "Testing",
       callback_url: "https://afrikanaccentadventures.com/contacts", // ✅ frontend callback!
       notification_id: notificationId,
       billing_address: {
