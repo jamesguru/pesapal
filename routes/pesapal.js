@@ -60,6 +60,7 @@ router.post("/payment", async (req, res) => {
   try {
     const token = await getAccessToken();
     const notificationId = await registerIPN(token);
+    const orderId = `TXN-${Date.now()}`;
     const billing = {
       email: email || "user@example.com",
       description: description || "Nothing",
@@ -67,6 +68,8 @@ router.post("/payment", async (req, res) => {
       first_name: first_name || "James",
       last_name: last_name || "Doe"
     };
+
+    console.log("REFERENCE", reference)
 
     const orderData = {
       id: reference,
@@ -132,6 +135,7 @@ router.post("/payment", async (req, res) => {
     res.json({ redirect_url: response.data.redirect_url });
 
   } catch (err) {
+    const orderId = `TXN-${Date.now()}`;
     const billing = {
       email: req.body?.email || 'user@example.com',
       phone: req.body?.phone || '254727632051',
@@ -174,6 +178,7 @@ router.post("/payment", async (req, res) => {
       ]
     );
 
+    console.error("Pesapal Error:", err.response?.data || err.message);
     res.status(500).json({ error: err.response?.data || err.message });
   }
 });
@@ -194,13 +199,6 @@ router.get("/callback", async (req, res) => {
       `UPDATE payments SET status = ? WHERE reference = ?`,
       [status, OrderMerchantReference]
     );
-
-     // Update bookings table (set status to 4)
-    await pool.query(
-      `UPDATE bookings SET status = 4 WHERE booking_ref = ?`,
-      [OrderMerchantReference]
-    );
-
 
     res.status(200).json({
       message: "Callback processed",
