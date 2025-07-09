@@ -196,6 +196,10 @@ router.get("/callback", async (req, res) => {
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
     const status = statusInfo.payment_status_description;
 
+
+    console.log(statusInfo)
+    
+
       let action = statusInfo.payment_status_code;
 
           if (!action) {
