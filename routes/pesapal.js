@@ -157,7 +157,7 @@ try {
         phone
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        reference,
+        "AXBOKXLOUYT",
         "USD",
         0.01,
         "Testing",
