@@ -47,15 +47,15 @@ async function checkTransactionStatus(orderTrackingId, token) {
 // Payment route
 router.post("/payment", async (req, res) => {
 
-   const {
-      email,
-      reference,
-      phone,
-      first_name,
-      last_name,
-      amount,
-      description
-    } = req.body;
+  const {
+    email,
+    reference,
+    phone,
+    first_name,
+    last_name,
+    amount,
+    description
+  } = req.body;
 
 
   try {
@@ -194,24 +194,33 @@ router.get("/callback", async (req, res) => {
   try {
     const token = await getAccessToken();
     const statusInfo = await checkTransactionStatus(OrderTrackingId, token);
-    const status = statusInfo.payment_status_description;
+    const status = statusInfo.payment_status_description.toUpperCase();
 
 
     console.log(statusInfo)
-    
 
-      let action = statusInfo.payment_status_code;
 
-          if (!action) {
-            action = "user accepted payment"
-          }
+    let action = statusInfo.payment_status_code;
+
+    if (!action) {
+      action = "user accepted payment"
+    }
 
 
     // 1. Update payments table
-  await pool.query(
+    await pool.query(
       `UPDATE payments SET status = ?, action = ? WHERE reference = ?`,
       [status, action, OrderMerchantReference]
     );
+
+
+    if (status !== "COMPLETED") {
+      return res.status(200).json({
+        message: "Payment not completed yet",
+        status,
+        reference: OrderMerchantReference
+      });
+    }
 
     // 2. Select booking_ref from payments
     const [rows] = await pool.query(
